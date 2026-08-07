@@ -23,12 +23,12 @@ jobs:
       - name: Run Contract Unit Tests
         run: |
           cd contract
-          cargo test
+          cargo test --package contract --package reward_token
 
       - name: Build Soroban WASM Targets
         run: |
           cd contract
-          cargo build --target wasm32-unknown-unknown --release
+          cargo build --target wasm32-unknown-unknown --release --package contract --package reward_token
 
   frontend-tests:
     name: Frontend Lint & Vitest Suite

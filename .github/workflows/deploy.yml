@@ -21,7 +21,7 @@ jobs:
       - name: Build Contracts WASM
         run: |
           cd contract
-          cargo build --target wasm32-unknown-unknown --release
+          cargo build --target wasm32-unknown-unknown --release --package contract --package reward_token
 
       - name: Deploy to Stellar Testnet
         run: |
