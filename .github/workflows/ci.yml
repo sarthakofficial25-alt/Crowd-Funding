@@ -48,7 +48,7 @@ jobs:
         run: |
           cd client
           npm install
-          npm run build --prefix packages/contract
+          npx tsc --project packages/contract/tsconfig.json
 
       - name: Run ESLint
         run: |
