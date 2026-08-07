@@ -133,7 +133,7 @@ impl CrowdFunding {
         // Emit event
         env.events().publish(
             (symbol_short!("campaign"), symbol_short!("created")),
-            (campaign_id, creator, goal),
+            campaign_id,
         );
 
         campaign_id
@@ -187,7 +187,7 @@ impl CrowdFunding {
 
             env.events().publish(
                 (symbol_short!("campaign"), symbol_short!("funded")),
-                (campaign_id, campaign.raised),
+                campaign_id,
             );
         }
 
@@ -198,7 +198,7 @@ impl CrowdFunding {
         // Emit contribution event
         env.events().publish(
             (symbol_short!("contrib"), symbol_short!("made")),
-            (campaign_id, from.clone(), amount),
+            campaign_id,
         );
 
         // Inter-contract call: mint reward tokens to contributor
@@ -228,7 +228,7 @@ impl CrowdFunding {
 
                 env.events().publish(
                     (symbol_short!("reward"), symbol_short!("minted")),
-                    (from, reward_amount),
+                    reward_amount,
                 );
             }
         }
@@ -263,7 +263,7 @@ impl CrowdFunding {
         // Emit event
         env.events().publish(
             (symbol_short!("campaign"), symbol_short!("withdraw")),
-            (campaign_id, campaign.raised),
+            campaign_id,
         );
     }
 
@@ -295,7 +295,7 @@ impl CrowdFunding {
 
         env.events().publish(
             (symbol_short!("campaign"), symbol_short!("cancel")),
-            (campaign_id,),
+            campaign_id,
         );
     }
 

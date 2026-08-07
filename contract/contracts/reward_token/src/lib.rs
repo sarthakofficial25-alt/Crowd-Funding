@@ -83,7 +83,7 @@ impl RewardToken {
 
         env.events().publish(
             (symbol_short!("mint"), symbol_short!("token")),
-            (to, amount),
+            amount,
         );
     }
 
