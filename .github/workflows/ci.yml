@@ -17,7 +17,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
 
       - name: Cache Cargo Dependencies
         uses: actions/cache@v4
@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Soroban WASM Targets
         working-directory: contract
-        run: cargo build --target wasm32-unknown-unknown --release
+        run: cargo build --target wasm32v1-none --release
 
   frontend-tests:
     name: Frontend Lint & Vitest Suite
