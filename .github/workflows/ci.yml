@@ -46,6 +46,7 @@ jobs:
         run: |
           cd client
           npm install
+          npm run build --prefix packages/contract
 
       - name: Run ESLint
         run: |

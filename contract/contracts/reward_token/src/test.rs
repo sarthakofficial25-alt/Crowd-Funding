@@ -8,7 +8,7 @@ fn test_initialize_and_mint() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register(RewardToken, ());
+    let contract_id = env.register_contract(None, RewardToken);
     let client = RewardTokenClient::new(&env, &contract_id);
 
     let admin = Address::generate(&env);
@@ -35,7 +35,7 @@ fn test_double_initialize() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register(RewardToken, ());
+    let contract_id = env.register_contract(None, RewardToken);
     let client = RewardTokenClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
 

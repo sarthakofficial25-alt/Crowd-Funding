@@ -29,8 +29,6 @@ jobs:
           STELLAR_SECRET_KEY: ${{ secrets.STELLAR_SECRET_KEY }}
         run: |
           echo "Deploying Soroban contracts to Stellar Testnet..."
-          # Deploy reward token contract
-          # Deploy crowd funding contract
 
   deploy-frontend:
     name: Deploy Frontend to Vercel
@@ -49,6 +47,7 @@ jobs:
         run: |
           cd client
           npm install
+          npm run build --prefix packages/contract
           npm run build
 
       - name: Deploy to Vercel
