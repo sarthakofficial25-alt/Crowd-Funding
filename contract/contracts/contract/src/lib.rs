@@ -147,11 +147,14 @@ impl CrowdFunding {
             panic!("Amount must be positive");
         }
 
-        let mut campaign: Campaign = env
+        let mut campaign: Campaign = match env
             .storage()
             .instance()
             .get(&DataKey::CampaignData(campaign_id))
-            .expect("Campaign not found");
+        {
+            Some(c) => c,
+            None => panic!("Campaign not found"),
+        };
 
         // Verify campaign is active
         if campaign.status != CampaignStatus::Active {
@@ -235,11 +238,14 @@ impl CrowdFunding {
     pub fn withdraw(env: Env, creator: Address, campaign_id: u32) {
         creator.require_auth();
 
-        let mut campaign: Campaign = env
+        let mut campaign: Campaign = match env
             .storage()
             .instance()
             .get(&DataKey::CampaignData(campaign_id))
-            .expect("Campaign not found");
+        {
+            Some(c) => c,
+            None => panic!("Campaign not found"),
+        };
 
         if campaign.creator != creator {
             panic!("Not campaign creator");
@@ -265,11 +271,14 @@ impl CrowdFunding {
     pub fn cancel_campaign(env: Env, creator: Address, campaign_id: u32) {
         creator.require_auth();
 
-        let mut campaign: Campaign = env
+        let mut campaign: Campaign = match env
             .storage()
             .instance()
             .get(&DataKey::CampaignData(campaign_id))
-            .expect("Campaign not found");
+        {
+            Some(c) => c,
+            None => panic!("Campaign not found"),
+        };
 
         if campaign.creator != creator {
             panic!("Not campaign creator");
@@ -294,10 +303,14 @@ impl CrowdFunding {
 
     /// Get campaign details by ID
     pub fn get_campaign(env: Env, campaign_id: u32) -> Campaign {
-        env.storage()
+        match env
+            .storage()
             .instance()
             .get(&DataKey::CampaignData(campaign_id))
-            .expect("Campaign not found")
+        {
+            Some(c) => c,
+            None => panic!("Campaign not found"),
+        }
     }
 
     /// Get total funds raised for a campaign
