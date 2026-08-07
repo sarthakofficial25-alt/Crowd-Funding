@@ -1,4 +1,4 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 
 use soroban_sdk::{
     contract, contractimpl, contracttype, contracterror, symbol_short, token, Address, BytesN, Env,
@@ -200,38 +200,6 @@ impl CrowdFunding {
             (symbol_short!("contrib"), symbol_short!("made")),
             campaign_id,
         );
-
-        // Inter-contract call: mint reward tokens to contributor
-        // Reward = 10% of contribution amount as reward tokens
-        if env.storage().instance().has(&DataKey::RewardToken) {
-            let reward_token: Address = env
-                .storage()
-                .instance()
-                .get(&DataKey::RewardToken)
-                .unwrap();
-            let reward_amount = amount / 10; // 10% reward
-            if reward_amount > 0 {
-                let admin: Address =
-                    env.storage().instance().get(&DataKey::Admin).unwrap();
-                // Call the reward token contract to mint tokens
-                // This demonstrates inter-contract communication
-                env.invoke_contract::<()>(
-                    &reward_token,
-                    &Symbol::new(&env, "mint"),
-                    soroban_sdk::vec![
-                        &env,
-                        admin.to_val(),
-                        from.to_val(),
-                        reward_amount.into_val(&env),
-                    ],
-                );
-
-                env.events().publish(
-                    (symbol_short!("reward"), symbol_short!("minted")),
-                    reward_amount,
-                );
-            }
-        }
     }
 
     /// Withdraw funds (only campaign creator, only when goal is reached)

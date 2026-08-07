@@ -1,4 +1,4 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, Address, Env, Map, String,
@@ -55,21 +55,13 @@ impl RewardToken {
             panic!("Amount must be positive");
         }
 
-        let mut balances: Map<Address, i128> = env
+        let current_balance: i128 = env
             .storage()
             .instance()
             .get(&DataKey::Balance(to.clone()))
-            .map(|val: i128| {
-                let mut map = Map::new(&env);
-                map.set(to.clone(), val);
-                map
-            })
-            .unwrap_or(Map::new(&env));
+            .unwrap_or(0);
 
-        let current_balance = balances.get(to.clone()).unwrap_or(0);
         let new_balance = current_balance + amount;
-        balances.set(to.clone(), new_balance);
-
         env.storage().instance().set(&DataKey::Balance(to.clone()), &new_balance);
 
         let total_supply: i128 = env

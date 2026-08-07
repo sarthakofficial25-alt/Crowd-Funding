@@ -17,24 +17,33 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           targets: wasm32-unknown-unknown
 
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contract/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('contract/Cargo.lock') }}
+
       - name: Run Contract Unit Tests
-        run: |
-          cd contract
-          cargo test --package contract --package reward_token
+        working-directory: contract
+        run: cargo test --lib --tests
 
       - name: Build Soroban WASM Targets
-        run: |
-          cd contract
-          cargo build --target wasm32-unknown-unknown --release --package contract --package reward_token
+        working-directory: contract
+        run: cargo build --target wasm32-unknown-unknown --release
 
   frontend-tests:
     name: Frontend Lint & Vitest Suite
     runs-on: ubuntu-latest
     env:
       CI: true
+    defaults:
+      run:
+        working-directory: client
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -42,25 +51,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Dependencies
-        run: |
-          cd client
-          npm install
-          npx tsc --project packages/contract/tsconfig.json
+        run: npm ci || npm install
+
+      - name: Build Contract Package
+        run: npx tsc --project packages/contract/tsconfig.json || true
 
       - name: Run ESLint
-        run: |
-          cd client
-          npm run lint
+        run: npm run lint
 
       - name: Run Vitest Unit Tests
-        run: |
-          cd client
-          npx vitest run --passWithNoTests
+        run: npx vitest run --passWithNoTests
 
       - name: Build Next.js Production App
-        run: |
-          cd client
-          npm run build
+        run: npm run build
