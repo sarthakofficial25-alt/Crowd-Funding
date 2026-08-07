@@ -7,7 +7,7 @@ use soroban_sdk::{testutils::Address as _, Address, Env, String};
 fn setup() -> (Env, Address, CrowdFundingClient<'static>) {
     let env = Env::default();
     env.mock_all_auths();
-    let contract_id = env.register_contract(None, CrowdFunding);
+    let contract_id = env.register(CrowdFunding, ());
     let client = CrowdFundingClient::new(&env, &contract_id);
     (env, contract_id, client)
 }
