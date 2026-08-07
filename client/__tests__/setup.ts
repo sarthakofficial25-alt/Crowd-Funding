@@ -1,5 +1,11 @@
 import { vi } from "vitest";
 
+globalThis.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: async () => ({}),
+  text: async () => "",
+} as Response);
+
 vi.mock("@stellar/freighter-api", () => ({
   isConnected: vi.fn().mockResolvedValue({ isConnected: true }),
   isAllowed: vi.fn().mockResolvedValue({ isAllowed: true }),

@@ -13,7 +13,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./__tests__/setup.ts"],
     include: ["__tests__/**/*.test.{ts,tsx}", "**/*.test.{ts,tsx}"],
-    pool: "threads",
+    pool: "forks",
   },
   resolve: {
     alias: {
