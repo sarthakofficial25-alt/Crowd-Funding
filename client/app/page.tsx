@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Meteors } from "@/components/ui/meteors";
 import Navbar from "@/components/Navbar";
 import ContractUI from "@/components/Contract";
+import { EventFeed } from "@/components/EventFeed";
 import {
   connectWallet,
   getWalletAddress,
@@ -33,7 +34,7 @@ export default function Home() {
       setWalletAddress(await connectWallet());
     } catch {
       // handled in Contract component
-    } finally {
+    } fontally {
       setIsConnecting(false);
     }
   }, []);
@@ -43,7 +44,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-[#050510] overflow-hidden">
+    <div className="relative flex flex-col min-h-screen bg-[#050510] overflow-x-hidden">
       {/* Meteors */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <Meteors number={12} />
@@ -51,8 +52,8 @@ export default function Home() {
 
       {/* Ambient orbs */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] rounded-full bg-[#f472b6]/20 blur-[120px] animate-float" />
-        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[500px] rounded-full bg-[#fbbf24]/15 blur-[120px] animate-float-delayed" />
+        <div className="absolute top-[-20%] left-[-10%] h-[400px] w-[400px] sm:h-[600px] sm:w-[600px] rounded-full bg-[#f472b6]/20 blur-[120px] animate-float" />
+        <div className="absolute bottom-[-10%] right-[-5%] h-[350px] w-[350px] sm:h-[500px] sm:w-[500px] rounded-full bg-[#fbbf24]/15 blur-[120px] animate-float-delayed" />
       </div>
 
       {/* Navbar */}
@@ -64,10 +65,10 @@ export default function Home() {
       />
 
       {/* Hero + Content */}
-      <main className="relative z-10 flex flex-1 w-full max-w-5xl mx-auto flex-col items-center px-6 pt-10 pb-16">
+      <main className="relative z-10 flex flex-1 w-full max-w-5xl mx-auto flex-col items-center px-4 sm:px-6 pt-6 sm:pt-10 pb-16">
         {/* Hero — compact */}
-        <div className="mb-10 text-center animate-fade-in-up">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-sm text-white/50 backdrop-blur-sm">
+        <div className="mb-8 sm:mb-10 text-center animate-fade-in-up">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-xs sm:text-sm text-white/50 backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f472b6] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f472b6]" />
@@ -76,7 +77,7 @@ export default function Home() {
           </div>
 
           <h1 className="mb-3">
-            <span className="block text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]">
+            <span className="block text-3xl sm:text-5xl font-bold tracking-tight leading-[1.1]">
               <span className="text-white">Crowd Funding </span>
               <span className="bg-gradient-to-r from-[#f472b6] via-[#fbbf24] to-[#f472b6] bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
                 on the Blockchain
@@ -84,7 +85,7 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="mx-auto max-w-lg text-sm sm:text-base leading-relaxed text-white/40">
+          <p className="mx-auto max-w-lg text-xs sm:text-base leading-relaxed text-white/40 px-2">
             Create campaigns, collect contributions, and fund ideas — transparently on Stellar.
           </p>
 
@@ -96,7 +97,7 @@ export default function Home() {
               { label: "Network", value: "Testnet" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-lg sm:text-xl font-bold text-white/90 font-mono">{stat.value}</p>
+                <p className="text-base sm:text-xl font-bold text-white/90 font-mono">{stat.value}</p>
                 <p className="text-[10px] text-white/30 mt-0.5">{stat.label}</p>
               </div>
             ))}
@@ -110,10 +111,13 @@ export default function Home() {
           isConnecting={isConnecting}
         />
 
+        {/* Real-time Event Feed */}
+        <EventFeed />
+
         {/* Footer */}
-        <div className="mt-10 flex flex-col items-center gap-4 animate-fade-in">
+        <div className="mt-10 flex flex-col items-center gap-4 animate-fade-in text-center">
           {/* Supply chain flow */}
-          <div className="flex items-center gap-3 text-xs text-white/20">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-white/20">
             {["Funding", "Active", "Completed"].map((step, i) => (
               <span key={step} className="flex items-center gap-3">
                 <span className="flex items-center gap-1.5">
@@ -136,7 +140,7 @@ export default function Home() {
               </span>
             ))}
           </div>
-          <div className="flex items-center gap-4 text-[10px] text-white/15">
+          <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 text-[10px] text-white/15">
             <span>Stellar Network</span>
             <span className="h-2.5 w-px bg-white/10" />
             <span>Freighter Wallet</span>
