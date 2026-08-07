@@ -17,6 +17,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: 1.84.0
           targets: wasm32-unknown-unknown
 
       - name: Run Contract Unit Tests
@@ -61,7 +62,7 @@ jobs:
       - name: Run Vitest Unit Tests
         run: |
           cd client
-          npx vitest run --passWithNoTests
+          npx vitest run
 
       - name: Build Next.js Production App
         run: |
