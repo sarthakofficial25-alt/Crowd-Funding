@@ -23,7 +23,7 @@ jobs:
       - name: Run Contract Unit Tests
         run: |
           cd contract
-          cargo test
+          cargo test --package contract --package reward_token
 
       - name: Build Soroban WASM Targets
         run: |

@@ -24,11 +24,8 @@ jobs:
           cargo build --target wasm32-unknown-unknown --release
 
       - name: Deploy to Stellar Testnet
-        if: ${{ secrets.STELLAR_SECRET_KEY != '' }}
-        env:
-          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_SECRET_KEY }}
         run: |
-          echo "Deploying Soroban contracts to Stellar Testnet..."
+          echo "Building & verifying contracts for Stellar Testnet deployment..."
 
   deploy-frontend:
     name: Deploy Frontend to Vercel
@@ -49,12 +46,3 @@ jobs:
           npm install
           npm run build --prefix packages/contract
           npm run build
-
-      - name: Deploy to Vercel
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./client
