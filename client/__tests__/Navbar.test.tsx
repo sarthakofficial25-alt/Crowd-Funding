@@ -12,8 +12,8 @@ describe("Navbar Component", () => {
         isConnecting={false}
       />
     );
-    expect(screen.getByText("CrowdFund")).toBeInTheDocument();
-    expect(screen.getByText("TESTNET")).toBeInTheDocument();
+    expect(screen.getByText("CrowdFund")).toBeDefined();
+    expect(screen.getByText("TESTNET")).toBeDefined();
   });
 
   it("renders connect wallet button when disconnected", () => {
@@ -25,7 +25,7 @@ describe("Navbar Component", () => {
         isConnecting={false}
       />
     );
-    expect(screen.getByText("Connect")).toBeInTheDocument();
+    expect(screen.getByText("Connect")).toBeDefined();
   });
 
   it("displays truncated address when wallet is connected", () => {
@@ -38,6 +38,6 @@ describe("Navbar Component", () => {
         isConnecting={false}
       />
     );
-    expect(screen.getByText("GBXK...KSHJ")).toBeInTheDocument();
+    expect(screen.getByText("GBXK...KSHJ")).toBeDefined();
   });
 });
