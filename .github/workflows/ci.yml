@@ -18,7 +18,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
 
       - name: Run Contract Unit Tests
         run: |
@@ -28,7 +28,7 @@ jobs:
       - name: Build Soroban WASM Targets
         run: |
           cd contract
-          cargo build --target wasm32-unknown-unknown --release
+          cargo build --target wasm32v1-none --release
 
   frontend-tests:
     name: Frontend Lint & Vitest Suite

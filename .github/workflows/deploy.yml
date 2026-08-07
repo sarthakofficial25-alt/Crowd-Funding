@@ -16,17 +16,17 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
 
       - name: Build Contracts WASM
         run: |
           cd contract
-          cargo build --target wasm32-unknown-unknown --release
+          cargo build --target wasm32v1-none --release
 
       - name: Verify WASM Artifacts
         run: |
           echo "=== Verifying WASM build artifacts ==="
-          ls -la contract/target/wasm32-unknown-unknown/release/*.wasm || true
+          ls -la contract/target/wasm32v1-none/release/*.wasm || true
           echo "Smart contracts compiled successfully for Stellar Testnet deployment"
 
   deploy-frontend:
