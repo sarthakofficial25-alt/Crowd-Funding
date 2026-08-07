@@ -9,11 +9,10 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "jsdom",
+    environment: "happy-dom",
     globals: true,
     setupFiles: ["./__tests__/setup.ts"],
     include: ["__tests__/**/*.test.{ts,tsx}", "**/*.test.{ts,tsx}"],
-    pool: "forks",
   },
   resolve: {
     alias: {
