@@ -10,8 +10,6 @@ jobs:
   contract-tests:
     name: Smart Contract Tests (Soroban)
     runs-on: ubuntu-latest
-    env:
-      RUST_BACKTRACE: full
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -19,36 +17,23 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32v1-none
-
-      - name: Show Rust Version
-        run: rustc --version && cargo --version
-
-      - name: Cache Cargo Dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            contract/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('contract/Cargo.lock') }}
+          targets: wasm32-unknown-unknown
 
       - name: Run Contract Unit Tests
-        working-directory: contract
-        run: cargo test -- --nocapture
+        run: |
+          cd contract
+          cargo test
 
       - name: Build Soroban WASM Targets
-        working-directory: contract
-        run: cargo build --target wasm32v1-none --release
+        run: |
+          cd contract
+          cargo build --target wasm32-unknown-unknown --release
 
   frontend-tests:
     name: Frontend Lint & Vitest Suite
     runs-on: ubuntu-latest
     env:
       CI: true
-    defaults:
-      run:
-        working-directory: client
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -56,19 +41,29 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
       - name: Install Dependencies
-        run: npm ci || npm install
+        run: |
+          cd client
+          npm install
 
       - name: Build Contract Package
-        run: npx tsc --project packages/contract/tsconfig.json || true
+        run: |
+          cd client
+          npx tsc --project packages/contract/tsconfig.json || true
 
       - name: Run ESLint
-        run: npm run lint
+        run: |
+          cd client
+          npm run lint
 
       - name: Run Vitest Unit Tests
-        run: npx vitest run --passWithNoTests
+        run: |
+          cd client
+          npx vitest run --passWithNoTests
 
       - name: Build Next.js Production App
-        run: npm run build
+        run: |
+          cd client
+          npm run build
