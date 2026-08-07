@@ -215,7 +215,12 @@ impl CrowdFunding {
                 env.invoke_contract::<()>(
                     &reward_token,
                     &Symbol::new(&env, "mint"),
-                    (admin.clone(), from.clone(), reward_amount).into_val(&env),
+                    soroban_sdk::vec![
+                        &env,
+                        admin.to_val(),
+                        from.to_val(),
+                        reward_amount.into_val(&env),
+                    ],
                 );
 
                 env.events().publish(
