@@ -15,18 +15,16 @@ jobs:
       - name: Install Rust & WASM Target
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           targets: wasm32-unknown-unknown
 
-      - name: Install Stellar CLI
-        run: |
-          cargo install --locked stellar-cli --features opt
-
-      - name: Build Contracts
+      - name: Build Contracts WASM
         run: |
           cd contract
           cargo build --target wasm32-unknown-unknown --release
 
       - name: Deploy to Stellar Testnet
+        if: ${{ secrets.STELLAR_SECRET_KEY != '' }}
         env:
           STELLAR_SECRET_KEY: ${{ secrets.STELLAR_SECRET_KEY }}
         run: |
@@ -42,7 +40,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies & Build
+        run: |
+          cd client
+          npm install
+          npm run build
+
       - name: Deploy to Vercel
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}

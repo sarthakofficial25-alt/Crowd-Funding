@@ -1,23 +1,28 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { useState } from "react";
 
 interface MeteorsProps {
   number?: number;
   className?: string;
 }
 
+interface MeteorStyle {
+  id: number;
+  left: string;
+  delay: string;
+  duration: string;
+}
+
 export function Meteors({ number = 15, className }: MeteorsProps) {
-  const meteors = useMemo(
-    () =>
-      Array.from({ length: number }, (_, i) => ({
-        id: i,
-        left: `${Math.floor(Math.random() * 100)}%`,
-        delay: `${(Math.random() * 5).toFixed(1)}s`,
-        duration: `${(Math.random() * 3 + 2).toFixed(1)}s`,
-      })),
-    [number]
+  const [meteors] = useState<MeteorStyle[]>(() =>
+    Array.from({ length: number }, (_, i) => ({
+      id: i,
+      left: `${(i * 7 + 13) % 100}%`,
+      delay: `${((i * 1.3) % 5).toFixed(1)}s`,
+      duration: `${((i * 0.7) % 3 + 2).toFixed(1)}s`,
+    }))
   );
 
   return (

@@ -34,7 +34,7 @@ export default function Home() {
       setWalletAddress(await connectWallet());
     } catch {
       // handled in Contract component
-    } fontally {
+    } finally {
       setIsConnecting(false);
     }
   }, []);

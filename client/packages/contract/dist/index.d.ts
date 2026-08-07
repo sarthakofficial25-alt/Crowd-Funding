@@ -18,29 +18,17 @@ export type DataKey = {
     values: void;
 };
 export interface Client {
-    /**
-     * Construct and simulate a get_goal transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-     */
     get_goal: ({ creator }: {
         creator: string;
     }, options?: MethodOptions) => Promise<AssembledTransaction<i128>>;
-    /**
-     * Construct and simulate a get_funds transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-     */
     get_funds: ({ creator }: {
         creator: string;
     }, options?: MethodOptions) => Promise<AssembledTransaction<i128>>;
-    /**
-     * Construct and simulate a contribute transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-     */
     contribute: ({ from, creator, amount }: {
         from: string;
         creator: string;
         amount: i128;
     }, options?: MethodOptions) => Promise<AssembledTransaction<null>>;
-    /**
-     * Construct and simulate a create_campaign transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-     */
     create_campaign: ({ creator, goal }: {
         creator: string;
         goal: i128;
@@ -48,14 +36,9 @@ export interface Client {
 }
 export declare class Client extends ContractClient {
     readonly options: ContractClientOptions;
-    static deploy<T = Client>(
-    /** Options for initializing a Client as well as for calling a method, with extras specific to deploying. */
-    options: MethodOptions & Omit<ContractClientOptions, "contractId"> & {
-        /** The hash of the Wasm blob, which must already be installed on-chain. */
+    static deploy<T = Client>(options: MethodOptions & Omit<ContractClientOptions, "contractId"> & {
         wasmHash: Buffer | string;
-        /** Salt used to generate the contract's ID. Passed through to {@link Operation.createCustomContract}. Default: random. */
         salt?: Buffer | Uint8Array;
-        /** The format used to decode `wasmHash`, if it's provided as a string. */
         format?: "hex" | "base64";
     }): Promise<AssembledTransaction<T>>;
     constructor(options: ContractClientOptions);

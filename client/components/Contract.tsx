@@ -69,14 +69,7 @@ function AlertIcon() {
   );
 }
 
-function WalletIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2-3H9a2 2 0 0 0-2 2H5" />
-      <path d="M12 12v.01" />
-    </svg>
-  );
-}
+
 
 // ── Styled Input ─────────────────────────────────────────────
 

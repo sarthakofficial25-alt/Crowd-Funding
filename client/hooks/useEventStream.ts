@@ -36,7 +36,7 @@ export function useEventStream() {
       data: { contributor: "GD7...1M4X", amount: 25 },
     },
   ]);
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected] = useState(true);
 
   useEffect(() => {
     // Simulate real-time event polling on Soroban Testnet

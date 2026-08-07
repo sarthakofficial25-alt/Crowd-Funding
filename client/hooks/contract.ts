@@ -4,6 +4,7 @@ import {
   Networks,
   TransactionBuilder,
   Keypair,
+  Contract,
   xdr,
   Address,
   nativeToScVal,
@@ -18,7 +19,7 @@ import {
   isAllowed,
   requestAccess,
 } from "@stellar/freighter-api";
-import * as contractClient from "contract";
+
 
 // ============================================================
 // CONSTANTS — Update these for your contract
