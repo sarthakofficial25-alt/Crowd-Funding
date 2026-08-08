@@ -41,9 +41,10 @@
 <a name="walkthrough-video"></a>
 ## 📹 Walkthrough Demo Video
 
-[Watch Walkthrough Demo Video](https://crowd-funding-flax.vercel.app/)
 
-> *Demonstrating Multi-Wallet Connection (Freighter, xBull, Albedo), Campaign Creation, Real-Time Soroban RPC Event Streaming, and Inter-Contract CRWD Reward Token Minting.*
+
+https://github.com/user-attachments/assets/33b9d479-98cc-48ec-978a-e96b14a125b1
+
 
 ---
 
