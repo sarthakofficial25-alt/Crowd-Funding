@@ -6,11 +6,11 @@ The **Stellar Crowd Funding Platform** is a decentralized crowdfunding applicati
 
 ```mermaid
 graph TD
-    Client[Next.js 16 Client Frontend] -->|Freighter Wallet API| Wallet[Freighter Extension]
-    Client -->|RPC Calls & Simulation| SorobanRPC[Stellar Soroban RPC]
-    SorobanRPC -->|Invoke Transactions| CrowdFund[CrowdFunding Smart Contract]
-    CrowdFund -->|Inter-Contract Call: mint()| RewardToken[RewardToken Smart Contract]
-    SorobanRPC -->|Event Polling| EventFeed[Real-Time Event Stream]
+    Client["Next.js 16 Client Frontend"] -->|"Multi-Wallet Connector"| Wallet["Stellar Wallets (Freighter / xBull / Albedo / LOBSTR)"]
+    Client -->|"RPC Calls & Simulation"| SorobanRPC["Stellar Soroban RPC"]
+    SorobanRPC -->|"Invoke Transactions"| CrowdFund["CrowdFunding Smart Contract"]
+    CrowdFund -->|"Inter-Contract Call: Mint Tokens"| RewardToken["RewardToken Smart Contract"]
+    SorobanRPC -->|"Event Polling"| EventFeed["Real-Time Event Stream"]
 ```
 
 ---
