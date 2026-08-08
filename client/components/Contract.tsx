@@ -4,8 +4,8 @@ import { useState, useCallback } from "react";
 import {
   createCampaign,
   contribute,
-  getCampaign,
-  getCampaignCount,
+  getFunds,
+  getGoal,
   CONTRACT_ADDRESS,
 } from "@/hooks/contract";
 import { AnimatedCard } from "@/components/ui/animated-card";
@@ -122,26 +122,8 @@ function MethodSignature({
 const STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; dot: string; variant: "success" | "warning" | "info" }> = {
   Active: { color: "text-[#34d399]", bg: "bg-[#34d399]/10", border: "border-[#34d399]/20", dot: "bg-[#34d399]", variant: "success" },
   Funding: { color: "text-[#f472b6]", bg: "bg-[#f472b6]/10", border: "border-[#f472b6]/20", dot: "bg-[#f472b6]", variant: "warning" },
-  Funded: { color: "text-[#fbbf24]", bg: "bg-[#fbbf24]/10", border: "border-[#fbbf24]/20", dot: "bg-[#fbbf24]", variant: "warning" },
-  Withdrawn: { color: "text-[#4fc3f7]", bg: "bg-[#4fc3f7]/10", border: "border-[#4fc3f7]/20", dot: "bg-[#4fc3f7]", variant: "info" },
   Completed: { color: "text-[#4fc3f7]", bg: "bg-[#4fc3f7]/10", border: "border-[#4fc3f7]/20", dot: "bg-[#4fc3f7]", variant: "info" },
-  Cancelled: { color: "text-[#f87171]", bg: "bg-[#f87171]/10", border: "border-[#f87171]/20", dot: "bg-[#f87171]", variant: "warning" },
 };
-
-// ── Campaign status label helper ─────────────────────────────
-
-function getCampaignStatusLabel(status: unknown): string {
-  if (typeof status === "string") return status;
-  if (status && typeof status === "object" && "tag" in (status as Record<string, unknown>)) {
-    return (status as { tag: string }).tag;
-  }
-  // Soroban may return status as an object like { Active: undefined }
-  if (status && typeof status === "object") {
-    const keys = Object.keys(status as Record<string, unknown>);
-    if (keys.length > 0) return keys[0];
-  }
-  return "Active";
-}
 
 // ── Main Component ───────────────────────────────────────────
 
@@ -153,60 +135,44 @@ interface ContractUIProps {
   isConnecting: boolean;
 }
 
-interface CampaignData {
-  creator: string;
-  title: string;
-  goal: bigint;
-  raised: bigint;
-  deadline: number;
-  status: string;
-  contributor_count: number;
-}
-
 export default function ContractUI({ walletAddress, onConnect, isConnecting }: ContractUIProps) {
   const [activeTab, setActiveTab] = useState<Tab>("view");
   const [error, setError] = useState<string | null>(null);
   const [txStatus, setTxStatus] = useState<string | null>(null);
 
   // Create campaign
-  const [campaignTitle, setCampaignTitle] = useState("");
   const [goalAmount, setGoalAmount] = useState("");
-  const [deadlineDays, setDeadlineDays] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
   // Contribute
-  const [contributeCampaignId, setContributeCampaignId] = useState("");
+  const [contributeTo, setContributeTo] = useState("");
   const [contributeAmount, setContributeAmount] = useState("");
   const [isContributing, setIsContributing] = useState(false);
 
   // View campaign
-  const [viewCampaignId, setViewCampaignId] = useState("");
+  const [viewCreator, setViewCreator] = useState("");
   const [isViewing, setIsViewing] = useState(false);
-  const [campaignData, setCampaignData] = useState<CampaignData | null>(null);
-  const [campaignCount, setCampaignCount] = useState<number | null>(null);
-  const [isLoadingCount, setIsLoadingCount] = useState(false);
+  const [campaignData, setCampaignData] = useState<{ goal: bigint; funds: bigint } | null>(null);
 
   const truncate = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
   const handleCreateCampaign = useCallback(async () => {
     if (!walletAddress) return setError("Connect wallet first");
-    if (!campaignTitle.trim()) return setError("Enter a campaign title");
     if (!goalAmount.trim()) return setError("Enter a goal amount");
-    const goal = BigInt(goalAmount.trim());
+    let goal: bigint;
+    try {
+      goal = BigInt(goalAmount.trim());
+    } catch {
+      return setError("Invalid goal amount. Enter a whole number.");
+    }
     if (goal <= BigInt(0)) return setError("Goal must be greater than 0");
-    // Compute deadline as current ledger timestamp + days in seconds
-    const days = parseInt(deadlineDays.trim() || "30", 10);
-    if (days <= 0) return setError("Deadline must be at least 1 day");
-    const deadlineTimestamp = Math.floor(Date.now() / 1000) + days * 86400;
     setError(null);
     setIsCreating(true);
     setTxStatus("Awaiting signature...");
     try {
-      await createCampaign(walletAddress, campaignTitle.trim(), goal, deadlineTimestamp);
+      await createCampaign(walletAddress, goal);
       setTxStatus("Campaign created on-chain!");
-      setCampaignTitle("");
       setGoalAmount("");
-      setDeadlineDays("");
       setTimeout(() => setTxStatus(null), 5000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Transaction failed");
@@ -214,21 +180,24 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
     } finally {
       setIsCreating(false);
     }
-  }, [walletAddress, campaignTitle, goalAmount, deadlineDays]);
+  }, [walletAddress, goalAmount]);
 
   const handleContribute = useCallback(async () => {
     if (!walletAddress) return setError("Connect wallet first");
-    if (contributeCampaignId.trim() === "") return setError("Enter a Campaign ID");
-    const campaignId = parseInt(contributeCampaignId.trim(), 10);
-    if (isNaN(campaignId) || campaignId < 0) return setError("Campaign ID must be a non-negative number");
+    if (!contributeTo.trim()) return setError("Enter campaign creator address");
     if (!contributeAmount.trim()) return setError("Enter contribution amount");
-    const amount = BigInt(contributeAmount.trim());
+    let amount: bigint;
+    try {
+      amount = BigInt(contributeAmount.trim());
+    } catch {
+      return setError("Invalid amount. Enter a whole number.");
+    }
     if (amount <= BigInt(0)) return setError("Amount must be greater than 0");
     setError(null);
     setIsContributing(true);
     setTxStatus("Awaiting signature...");
     try {
-      await contribute(walletAddress, campaignId, amount);
+      await contribute(walletAddress, contributeTo.trim(), amount);
       setTxStatus("Contribution sent on-chain!");
       setContributeAmount("");
       setTimeout(() => setTxStatus(null), 5000);
@@ -238,48 +207,41 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
     } finally {
       setIsContributing(false);
     }
-  }, [walletAddress, contributeCampaignId, contributeAmount]);
+  }, [walletAddress, contributeTo, contributeAmount]);
 
   const handleViewCampaign = useCallback(async () => {
-    if (viewCampaignId.trim() === "") return setError("Enter a Campaign ID");
-    const campaignId = parseInt(viewCampaignId.trim(), 10);
-    if (isNaN(campaignId) || campaignId < 0) return setError("Campaign ID must be a non-negative number");
+    if (!viewCreator.trim()) return setError("Enter campaign creator address");
     setError(null);
     setIsViewing(true);
     setCampaignData(null);
     try {
-      const raw = await getCampaign(campaignId, walletAddress || undefined);
-      if (!raw) {
-        setError("Campaign not found");
+      const [goal, funds] = await Promise.all([
+        getGoal(viewCreator.trim(), walletAddress || undefined),
+        getFunds(viewCreator.trim(), walletAddress || undefined),
+      ]);
+      if (goal === BigInt(0) && funds === BigInt(0)) {
+        setError("No campaign found for this creator address. The address may not have created a campaign yet.");
       } else {
-        // Parse the raw result from Soroban
-        const data: CampaignData = {
-          creator: typeof raw.creator === "string" ? raw.creator : String(raw.creator),
-          title: typeof raw.title === "string" ? raw.title : String(raw.title ?? ""),
-          goal: BigInt(raw.goal ?? 0),
-          raised: BigInt(raw.raised ?? 0),
-          deadline: Number(raw.deadline ?? 0),
-          status: getCampaignStatusLabel(raw.status),
-          contributor_count: Number(raw.contributor_count ?? 0),
-        };
-        setCampaignData(data);
+        setCampaignData({ goal, funds });
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Query failed");
     } finally {
       setIsViewing(false);
     }
-  }, [viewCampaignId, walletAddress]);
+  }, [viewCreator, walletAddress]);
 
-  const handleLoadCampaignCount = useCallback(async () => {
-    setIsLoadingCount(true);
-    try {
-      const count = await getCampaignCount(walletAddress || undefined);
-      setCampaignCount(count);
-    } catch {
-      setCampaignCount(null);
-    } finally {
-      setIsLoadingCount(false);
+  // Auto-fill connected wallet address for View tab
+  const handleUseMyAddress = useCallback(() => {
+    if (walletAddress) {
+      setViewCreator(walletAddress);
+    }
+  }, [walletAddress]);
+
+  // Auto-fill connected wallet address for Contribute tab
+  const handleUseMyAddressContribute = useCallback(() => {
+    if (walletAddress) {
+      setContributeTo(walletAddress);
     }
   }, [walletAddress]);
 
@@ -291,12 +253,6 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
 
   const formatAmount = (amount: bigint) => {
     return amount.toLocaleString("en-US");
-  };
-
-  const formatDeadline = (timestamp: number) => {
-    if (timestamp === 0) return "N/A";
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
 
   return (
@@ -370,25 +326,18 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
             {/* View */}
             {activeTab === "view" && (
               <div className="space-y-5">
-                <MethodSignature name="get_campaign" params="(campaign_id: u32)" returns="-> Campaign" color="#4fc3f7" />
-                
-                {/* Campaign count helper */}
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={handleLoadCampaignCount} 
-                    disabled={isLoadingCount}
-                    className="text-xs text-[#4fc3f7]/60 hover:text-[#4fc3f7] border border-[#4fc3f7]/15 hover:border-[#4fc3f7]/30 rounded-lg px-3 py-1.5 transition-all disabled:opacity-50"
-                  >
-                    {isLoadingCount ? "Loading..." : "Check Total Campaigns"}
-                  </button>
-                  {campaignCount !== null && (
-                    <span className="text-xs text-white/50 font-mono">
-                      {campaignCount} campaign{campaignCount !== 1 ? "s" : ""} found (IDs: 0 – {Math.max(0, campaignCount - 1)})
-                    </span>
+                <MethodSignature name="get_campaign" params="(creator: Address)" returns="-> (goal, funds)" color="#4fc3f7" />
+                <div className="space-y-2">
+                  <Input label="Campaign Creator Address" value={viewCreator} onChange={(e) => setViewCreator(e.target.value)} placeholder="G..." />
+                  {walletAddress && (
+                    <button
+                      onClick={handleUseMyAddress}
+                      className="text-[11px] text-[#4fc3f7]/50 hover:text-[#4fc3f7]/80 transition-colors"
+                    >
+                      Use my address ({truncate(walletAddress)})
+                    </button>
                   )}
                 </div>
-
-                <Input label="Campaign ID" value={viewCampaignId} onChange={(e) => setViewCampaignId(e.target.value)} placeholder="e.g. 0" type="number" />
                 <ShimmerButton onClick={handleViewCampaign} disabled={isViewing} shimmerColor="#4fc3f7" className="w-full">
                   {isViewing ? <><SpinnerIcon /> Fetching...</> : <><TargetIcon /> View Campaign</>}
                 </ShimmerButton>
@@ -398,55 +347,37 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
                     <div className="border-b border-white/[0.06] px-4 py-3 flex items-center justify-between">
                       <span className="text-[10px] font-medium uppercase tracking-wider text-white/25">Campaign Details</span>
                       {(() => {
-                        const statusKey = campaignData.status;
-                        const cfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.Active;
+                        const progress = campaignData.goal > BigInt(0) ? Number((campaignData.funds * BigInt(100)) / campaignData.goal) : 0;
+                        const cfg = progress >= 100 ? STATUS_CONFIG.Completed : STATUS_CONFIG.Funding;
                         return (
                           <Badge variant={cfg.variant}>
                             <span className={cn("h-1.5 w-1.5 rounded-full", cfg.dot)} />
-                            {statusKey}
+                            {progress >= 100 ? "Completed" : "Funding"}
                           </Badge>
                         );
                       })()}
                     </div>
                     <div className="p-4 space-y-4">
-                      {campaignData.title && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-white/35">Title</span>
-                          <span className="text-sm text-white/80 font-medium">{campaignData.title}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/35">Creator</span>
-                        <span className="font-mono text-xs text-white/60">{truncate(campaignData.creator)}</span>
-                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-white/35">Goal</span>
                         <span className="font-mono text-sm text-white/80">{formatAmount(campaignData.goal)} XLM</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-white/35">Raised</span>
-                        <span className="font-mono text-sm text-white/80">{formatAmount(campaignData.raised)} XLM</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/35">Deadline</span>
-                        <span className="text-xs text-white/60">{formatDeadline(campaignData.deadline)}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/35">Contributors</span>
-                        <span className="font-mono text-sm text-white/80">{campaignData.contributor_count}</span>
+                        <span className="font-mono text-sm text-white/80">{formatAmount(campaignData.funds)} XLM</span>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-white/35">Progress</span>
                           <span className="text-white/70 font-mono">
-                            {campaignData.goal > BigInt(0) ? Number((campaignData.raised * BigInt(100)) / campaignData.goal) : 0}%
+                            {campaignData.goal > BigInt(0) ? Number((campaignData.funds * BigInt(100)) / campaignData.goal) : 0}%
                           </span>
                         </div>
                         <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
                           <div 
                             className="h-full rounded-full bg-gradient-to-r from-[#f472b6] to-[#fbbf24] transition-all duration-500"
                             style={{ 
-                              width: `${campaignData.goal > BigInt(0) ? Math.min(100, Number((campaignData.raised * BigInt(100)) / campaignData.goal)) : 0}%` 
+                              width: `${campaignData.goal > BigInt(0) ? Math.min(100, Number((campaignData.funds * BigInt(100)) / campaignData.goal)) : 0}%` 
                             }}
                           />
                         </div>
@@ -460,28 +391,15 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
             {/* Create */}
             {activeTab === "create" && (
               <div className="space-y-5">
-                <MethodSignature name="create_campaign" params="(creator, title, goal, deadline)" color="#f472b6" />
+                <MethodSignature name="create_campaign" params="(creator: Address, goal: i128)" color="#f472b6" />
                 <p className="text-xs text-white/40">
-                  Start a new crowdfunding campaign. Set your funding goal in XLM and a deadline.
+                  Start a new crowdfunding campaign. Set your funding goal in XLM.
                 </p>
-                <Input 
-                  label="Campaign Title" 
-                  value={campaignTitle} 
-                  onChange={(e) => setCampaignTitle(e.target.value)} 
-                  placeholder="e.g. Build a Community Library" 
-                />
                 <Input 
                   label="Funding Goal (XLM)" 
                   value={goalAmount} 
                   onChange={(e) => setGoalAmount(e.target.value)} 
                   placeholder="e.g. 1000" 
-                  type="number"
-                />
-                <Input 
-                  label="Deadline (days from now)" 
-                  value={deadlineDays} 
-                  onChange={(e) => setDeadlineDays(e.target.value)} 
-                  placeholder="e.g. 30" 
                   type="number"
                 />
                 {walletAddress ? (
@@ -503,17 +421,26 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
             {/* Contribute */}
             {activeTab === "contribute" && (
               <div className="space-y-5">
-                <MethodSignature name="contribute" params="(from, campaign_id, amount)" color="#fbbf24" />
+                <MethodSignature name="contribute" params="(from, creator, amount)" color="#fbbf24" />
                 <p className="text-xs text-white/40">
-                  Support a campaign by contributing XLM. Enter the campaign ID and amount.
+                  Support a campaign by contributing XLM. Enter the campaign creator&apos;s address.
                 </p>
-                <Input 
-                  label="Campaign ID" 
-                  value={contributeCampaignId} 
-                  onChange={(e) => setContributeCampaignId(e.target.value)} 
-                  placeholder="e.g. 0" 
-                  type="number"
-                />
+                <div className="space-y-2">
+                  <Input 
+                    label="Campaign Creator Address" 
+                    value={contributeTo} 
+                    onChange={(e) => setContributeTo(e.target.value)} 
+                    placeholder="G..." 
+                  />
+                  {walletAddress && (
+                    <button
+                      onClick={handleUseMyAddressContribute}
+                      className="text-[11px] text-[#fbbf24]/50 hover:text-[#fbbf24]/80 transition-colors"
+                    >
+                      Use my address ({truncate(walletAddress)})
+                    </button>
+                  )}
+                </div>
                 <Input 
                   label="Contribution Amount (XLM)" 
                   value={contributeAmount} 
@@ -542,7 +469,7 @@ export default function ContractUI({ walletAddress, onConnect, isConnecting }: C
           <div className="border-t border-white/[0.04] px-6 py-3 flex items-center justify-between">
             <p className="text-[10px] text-white/15">Crowd Funding &middot; Soroban</p>
             <div className="flex items-center gap-2">
-              {["Active", "Funded", "Withdrawn"].map((s, i) => (
+              {["Funding", "Active", "Completed"].map((s, i) => (
                 <span key={s} className="flex items-center gap-1.5">
                   <span className={cn("h-1 w-1 rounded-full", STATUS_CONFIG[s]?.dot ?? "bg-white/20")} />
                   <span className="font-mono text-[9px] text-white/15">{s}</span>
