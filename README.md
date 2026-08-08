@@ -310,38 +310,38 @@ stellar contract deploy `
 
 <a name="desktop-view"></a>
 ### Desktop View
-The main dApp dashboard featuring glassmorphic UI, live contract stats (~5s Finality, <$0.01 Cost), and interaction tabs.
+<img width="1919" height="1029" alt="image" src="https://github.com/user-attachments/assets/66d0e92b-93d0-48f2-93bc-eff3079c16cd" />
 
 ---
 
 <a name="mobile-view"></a>
 ### Mobile Responsive View
-Touch-optimized layout with adaptive breakpoints for mobile and tablet displays.
+<img width="738" height="1600" alt="WhatsApp Image 2026-08-08 at 9 44 33 PM" src="https://github.com/user-attachments/assets/58044120-f889-4e57-9eac-8b98a2972458" />
 
 ---
 
 <a name="multi-wallet"></a>
 ### Multi-Wallet Integration
-Interactive selection modal supporting **Freighter**, **xBull**, **Albedo**, **LOBSTR**, and **Rabet** wallets.
+<img width="1919" height="924" alt="Screenshot 2026-08-08 213801" src="https://github.com/user-attachments/assets/a318499a-86b1-446d-9306-bdc60ace4333" />
 
 ---
 
 <a name="testnet-tx"></a>
 ### Deployed Testnet Transaction
-Real-time Soroban RPC transaction submission and verification on Stellar Testnet.
+<img width="1918" height="1032" alt="Screenshot 2026-08-08 205922" src="https://github.com/user-attachments/assets/597ac0b4-74fb-4b9c-8263-caa0e9148a0b" />
 
 ---
 
 <a name="cicd-pipeline"></a>
 ### CI/CD Pipeline
-Automated GitHub Actions workflows for contract compilation, ESLint checking, and Vitest suite execution.
+<img width="1919" height="926" alt="image" src="https://github.com/user-attachments/assets/78110175-c1f0-4bbe-903b-3985a42201f5" />
+<img width="1919" height="927" alt="image" src="https://github.com/user-attachments/assets/5a1f4033-77a3-4b6a-a9c8-942c8d86ae05" />
 
 ---
 
 <a name="test-output"></a>
 ### Test Output
-- **Soroban Unit Tests**: `11 passed; 0 failed`
-- **Vitest Component Tests**: `9 passed across 3 test files`
+<img width="601" height="230" alt="Screenshot 2026-08-08 210544" src="https://github.com/user-attachments/assets/777c26d8-ab11-405a-adc8-ca8d25d9b2a7" />
 
 ---
 
