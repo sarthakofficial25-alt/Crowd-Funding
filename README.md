@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://stellar-crowdfund-dapp.vercel.app/" target="_blank">
-    <img src="https://img.shields.io/badge/LIVE_DEMO-CROWD--FUNDING.VERCEL.APP-cyan?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  <a href="https://crowd-funding-flax.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/LIVE_DEMO-CROWD--FUNDING--FLAX.VERCEL.APP-cyan?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
   </a>
 </p>
 
@@ -19,6 +19,7 @@
 
 <p align="center">
   <a href="#overview">Overview</a> •
+  <a href="#walkthrough-video">Walkthrough Video</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#directory-structure">Directory Structure</a> •
   <a href="#architecture">Architecture</a> •
@@ -26,12 +27,23 @@
   <a href="#development">Development</a> •
   <a href="#deployment-guide">Deployment Guide</a> •
   <a href="#verification">Verification</a> •
-  <a href="#security">Security</a>
+  <a href="#security">Security</a> •
+  <a href="#media-screenshots">Project Media</a>
 </p>
 
 ---
 
 * **GitHub Repository:** [sarthakofficial25-alt/Crowd-Funding](https://github.com/sarthakofficial25-alt/Crowd-Funding)
+* **Live Vercel Application:** [https://crowd-funding-flax.vercel.app/](https://crowd-funding-flax.vercel.app/)
+
+---
+
+<a name="walkthrough-video"></a>
+## 📹 Walkthrough Demo Video
+
+[Watch Walkthrough Demo Video](https://crowd-funding-flax.vercel.app/)
+
+> *Demonstrating Multi-Wallet Connection (Freighter, xBull, Albedo), Campaign Creation, Real-Time Soroban RPC Event Streaming, and Inter-Contract CRWD Reward Token Minting.*
 
 ---
 
@@ -62,6 +74,13 @@
 * [8. Deployed Contract Verification](#verification)
   * [On-Chain Contract Verification Links](#verification-links)
 * [9. Security Considerations](#security)
+* [10. Project Media & Screenshots](#media-screenshots)
+  * [Desktop View](#desktop-view)
+  * [Mobile Responsive View](#mobile-view)
+  * [Multi-Wallet Integration](#multi-wallet)
+  * [Deployed Testnet Transaction](#testnet-tx)
+  * [CI/CD Pipeline](#cicd-pipeline)
+  * [Test Output](#test-output)
 
 ---
 
@@ -73,6 +92,7 @@ Traditional centralized crowdfunding platforms (e.g., Kickstarter, GoFundMe) suf
 
 ### The CrowdFund Solution
 Stellar CrowdFund resolves these structural limitations on the Stellar blockchain using:
+* **Multi-Wallet Connectivity**: Seamless support for Freighter, xBull, Albedo, LOBSTR, and Rabet wallets.
 * **Permissionless Campaign Creation**: Anyone can launch a crowdfunding campaign setting a target XLM goal, deadline, and title directly on-chain.
 * **Automated Inter-Contract Reward Token Yield**: Contributing XLM automatically invokes a secondary `RewardToken` smart contract to mint `CRWD` governance/reward tokens (10% reward yield) back to contributors in real time.
 * **Non-Custodial Transparency**: All contributions are locked securely inside Soroban smart contract instances with immediate progress tracking, zero hidden fees, and permissioned creator withdrawals upon goal fulfillment.
@@ -83,7 +103,8 @@ Stellar CrowdFund resolves these structural limitations on the Stellar blockchai
 ## 2. Technical Stack
 
 * **Smart Contracts:** Rust, Soroban SDK `v25.3.1`, `wasm32v1-none`
-* **Frontend:** Next.js 16 (Turbopack, App Router), React 19, TypeScript, Tailwind CSS v4, Lucide/HeroIcons
+* **Frontend:** Next.js 16 (Turbopack, App Router), React 19, TypeScript, Tailwind CSS v4
+* **Multi-Wallet SDK:** Multi-Provider Wallet Connector (Freighter, xBull, Albedo, LOBSTR, Rabet)
 * **Blockchain Integration:** `@stellar/stellar-sdk` v14, `@stellar/freighter-api` v6
 * **Event Polling & Real-time State:** Soroban RPC Event Streaming (`getEvents()`, `getLatestLedger()`)
 * **Testing & Quality Assurance:** Vitest (`happy-dom`, `@testing-library/react`), Rust `testutils` Suite
@@ -104,7 +125,7 @@ Crowd-Funding/
 │   ├── app/                           # App router pages & layouts
 │   ├── components/                    # React UI components (ContractUI, Navbar, EventFeed)
 │   ├── hooks/                         # Stellar SDK RPC helpers & Event Stream hooks
-│   ├── lib/                           # Utility functions & constants
+│   ├── lib/                           # Utility functions & multi-wallet helpers
 │   ├── packages/contract/             # Auto-generated Soroban client contract TS bindings
 │   └── __tests__/                     # Vitest unit test suite (Navbar, EventFeed, Contract)
 ├── contract/                          # Soroban Rust Smart Contracts Workspace
@@ -131,17 +152,19 @@ Crowd-Funding/
 
 ```mermaid
 graph TD
-    Client[Next.js 16 Client Frontend] -->|Freighter Wallet API| Wallet[Freighter Extension]
-    Client -->|RPC Calls & Simulation| SorobanRPC[Stellar Soroban RPC]
-    SorobanRPC -->|Invoke Transactions| CrowdFund[CrowdFunding Smart Contract]
-    CrowdFund -->|Inter-Contract Call: mint()| RewardToken[RewardToken Smart Contract]
-    SorobanRPC -->|Event Polling| EventFeed[Real-Time Event Stream]
+    Client["Next.js 16 Client Frontend"] -->|Multi-Wallet Connector| Wallet["Stellar Wallets (Freighter / xBull / Albedo / LOBSTR)"]
+    Client -->|RPC Calls & Simulation| SorobanRPC["Stellar Soroban RPC"]
+    SorobanRPC -->|Invoke Transactions| CrowdFund["CrowdFunding Smart Contract"]
+    CrowdFund -->|Inter-Contract Call: mint()| RewardToken["RewardToken Smart Contract"]
+    SorobanRPC -->|Event Polling| EventFeed["Real-Time Event Stream"]
 ```
 
+<a name="decoupled-flow"></a>
 ### 1. Decoupled Access Control & State Flow
 - **Simulation Layer**: Client executes read-only queries (`get_campaign`, `get_funds`, `get_goal`) by constructing mock `Account` simulation envelopes, eliminating testnet account lookup errors.
-- **State Updates**: Write functions (`create_campaign`, `contribute`, `withdraw`) build Soroban transaction operations, request user signature via Freighter, assemble RPC simulation results, and submit to Stellar Testnet.
+- **State Updates**: Write functions (`create_campaign`, `contribute`, `withdraw`) build Soroban transaction operations, request user signature via selected Stellar wallet, assemble RPC simulation results, and submit to Stellar Testnet.
 
+<a name="inter-contract-communication"></a>
 ### 2. Inter-Contract Communication Sequence
 ```
 Contributor --(contribute XLM)--> CrowdFunding Contract
@@ -191,7 +214,7 @@ Publishes structured contract events:
 ### Prerequisites
 - Node.js `v20+` & npm
 - Rust & `wasm32v1-none` compilation target
-- [Freighter Wallet Extension](https://www.freighter.app/)
+- [Freighter Wallet Extension](https://www.freighter.app/) / xBull / Albedo
 
 ### Compilation & Contract Unit Tests
 ```bash
@@ -279,6 +302,46 @@ stellar contract deploy `
 1. **Strict Access Control**: `require_auth()` is enforced on all state-mutating operations (`create_campaign`, `contribute`, `withdraw`, `cancel_campaign`).
 2. **Reentrancy Protection**: State updates (`raised` total, `status`) are saved to instance storage *before* emitting events or invoking cross-contract minting calls.
 3. **Safe Inter-Contract Invocations**: The `RewardToken` contract restricts `mint()` authorization strictly to the stored `Admin` address.
+
+---
+
+<a name="media-screenshots"></a>
+## 10. Project Media & Screenshots
+
+<a name="desktop-view"></a>
+### Desktop View
+The main dApp dashboard featuring glassmorphic UI, live contract stats (~5s Finality, <$0.01 Cost), and interaction tabs.
+
+---
+
+<a name="mobile-view"></a>
+### Mobile Responsive View
+Touch-optimized layout with adaptive breakpoints for mobile and tablet displays.
+
+---
+
+<a name="multi-wallet"></a>
+### Multi-Wallet Integration
+Interactive selection modal supporting **Freighter**, **xBull**, **Albedo**, **LOBSTR**, and **Rabet** wallets.
+
+---
+
+<a name="testnet-tx"></a>
+### Deployed Testnet Transaction
+Real-time Soroban RPC transaction submission and verification on Stellar Testnet.
+
+---
+
+<a name="cicd-pipeline"></a>
+### CI/CD Pipeline
+Automated GitHub Actions workflows for contract compilation, ESLint checking, and Vitest suite execution.
+
+---
+
+<a name="test-output"></a>
+### Test Output
+- **Soroban Unit Tests**: `11 passed; 0 failed`
+- **Vitest Component Tests**: `9 passed across 3 test files`
 
 ---
 

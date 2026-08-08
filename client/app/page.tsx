@@ -28,10 +28,10 @@ export default function Home() {
     })();
   }, []);
 
-  const handleConnect = useCallback(async () => {
+  const handleConnect = useCallback(async (walletType?: Parameters<typeof connectWallet>[0]) => {
     setIsConnecting(true);
     try {
-      setWalletAddress(await connectWallet());
+      setWalletAddress(await connectWallet(walletType));
     } catch {
       // handled in Contract component
     } finally {

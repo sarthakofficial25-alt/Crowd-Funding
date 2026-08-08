@@ -25,7 +25,7 @@ describe("Navbar Component", () => {
         isConnecting={false}
       />
     );
-    expect(screen.getByText("Connect")).toBeDefined();
+    expect(screen.getByText("Connect Wallet")).toBeDefined();
   });
 
   it("displays truncated address when wallet is connected", () => {

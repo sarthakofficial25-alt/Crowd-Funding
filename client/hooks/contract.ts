@@ -52,28 +52,75 @@ const server = new rpc.Server(RPC_URL);
 // Wallet Helpers
 // ============================================================
 
-export async function checkConnection(): Promise<boolean> {
-  const result = await isConnected();
-  return result.isConnected;
+export type WalletType = "freighter" | "xbull" | "albedo" | "lobstr" | "rabet";
+
+export interface WalletOption {
+  id: WalletType;
+  name: string;
+  icon: string;
+  description: string;
+  isAvailable: boolean;
 }
 
-export async function connectWallet(): Promise<string> {
-  const connResult = await isConnected();
-  if (!connResult.isConnected) {
-    throw new Error("Freighter extension is not installed or not available.");
+export async function checkConnection(): Promise<boolean> {
+  try {
+    const result = await isConnected();
+    return result.isConnected;
+  } catch {
+    return false;
+  }
+}
+
+export async function connectWallet(walletType: WalletType = "freighter"): Promise<string> {
+  if (typeof window === "undefined") {
+    throw new Error("Window not defined");
   }
 
-  const allowedResult = await isAllowed();
-  if (!allowedResult.isAllowed) {
-    await setAllowed();
-    await requestAccess();
+  if (walletType === "freighter") {
+    const connResult = await isConnected();
+    if (!connResult.isConnected) {
+      throw new Error("Freighter extension is not installed. Please install Freighter from freighter.app");
+    }
+    const allowedResult = await isAllowed();
+    if (!allowedResult.isAllowed) {
+      await setAllowed();
+      await requestAccess();
+    }
+    const { address } = await getAddress();
+    if (!address) throw new Error("Could not retrieve wallet address from Freighter.");
+    return address;
   }
 
-  const { address } = await getAddress();
-  if (!address) {
-    throw new Error("Could not retrieve wallet address from Freighter.");
+  if (walletType === "xbull") {
+    // xBull Extension injection check
+    const xbull = (window as unknown as { xbull?: { getPublicKey: () => Promise<string> } }).xbull;
+    if (xbull && typeof xbull.getPublicKey === "function") {
+      const address = await xbull.getPublicKey();
+      if (address) return address;
+    }
+    // Fallback redirect or prompt for xBull
+    throw new Error("xBull Wallet extension is not installed or locked. Please install xBull extension or unlock it.");
   }
-  return address;
+
+  if (walletType === "albedo") {
+    const albedoWindow = (window as unknown as { albedo?: { publicKey: (params: object) => Promise<{ pubkey: string }> } }).albedo;
+    if (albedoWindow && typeof albedoWindow.publicKey === "function") {
+      const res = await albedoWindow.publicKey({});
+      if (res.pubkey) return res.pubkey;
+    }
+    throw new Error("Albedo Wallet is not loaded or popup was closed.");
+  }
+
+  if (walletType === "lobstr" || walletType === "rabet") {
+    const rabet = (window as unknown as { rabet?: { connect: () => Promise<{ publicKey: string }> } }).rabet;
+    if (rabet && typeof rabet.connect === "function") {
+      const res = await rabet.connect();
+      if (res.publicKey) return res.publicKey;
+    }
+    throw new Error(`${walletType.toUpperCase()} Wallet extension not detected.`);
+  }
+
+  throw new Error("Unsupported wallet type.");
 }
 
 export async function getWalletAddress(): Promise<string | null> {
