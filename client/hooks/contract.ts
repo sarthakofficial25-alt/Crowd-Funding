@@ -10,6 +10,7 @@ import {
   nativeToScVal,
   scValToNative,
   rpc,
+  Account,
 } from "@stellar/stellar-sdk";
 import {
   isConnected,
@@ -110,7 +111,15 @@ export async function callContract(
   sign: boolean = true
 ) {
   const contract = new Contract(CONTRACT_ADDRESS);
-  const account = await server.getAccount(caller);
+
+  // For read-only (simulation-only) calls, use a mock Account to avoid
+  // the "Account not found" error when the caller doesn't exist on-chain.
+  let account: Account;
+  if (!sign) {
+    account = new Account(caller, "0");
+  } else {
+    account = await server.getAccount(caller);
+  }
 
   const tx = new TransactionBuilder(account, {
     fee: "100",
@@ -168,6 +177,8 @@ export async function callContract(
 
 /**
  * Read-only contract call (does not require signing).
+ * Uses a random keypair as a dummy source account — the mock Account
+ * avoids hitting the network for account lookup.
  */
 export async function readContract(
   method: string,
@@ -200,6 +211,10 @@ export function toScValU32(value: number): xdr.ScVal {
   return nativeToScVal(value, { type: "u32" });
 }
 
+export function toScValU64(value: number): xdr.ScVal {
+  return nativeToScVal(value, { type: "u64" });
+}
+
 export function toScValI128(value: bigint): xdr.ScVal {
   return nativeToScVal(value, { type: "i128" });
 }
@@ -218,15 +233,22 @@ export function toScValBool(value: boolean): xdr.ScVal {
 
 /**
  * Create a new campaign.
- * Calls: create_campaign(creator: Address, goal: i128)
+ * Calls: create_campaign(creator: Address, title: String, goal: i128, deadline: u64) -> u32
  */
 export async function createCampaign(
   caller: string,
-  goal: bigint
+  title: string,
+  goal: bigint,
+  deadline: number
 ) {
   return callContract(
     "create_campaign",
-    [toScValAddress(caller), toScValI128(goal)],
+    [
+      toScValAddress(caller),
+      toScValString(title),
+      toScValI128(goal),
+      toScValU64(deadline),
+    ],
     caller,
     true
   );
@@ -234,32 +256,48 @@ export async function createCampaign(
 
 /**
  * Contribute to a campaign.
- * Calls: contribute(from: Address, creator: Address, amount: i128)
+ * Calls: contribute(from: Address, campaign_id: u32, amount: i128)
  */
 export async function contribute(
   caller: string,
-  creator: string,
+  campaignId: number,
   amount: bigint
 ) {
   return callContract(
     "contribute",
-    [toScValAddress(caller), toScValAddress(creator), toScValI128(amount)],
+    [toScValAddress(caller), toScValU32(campaignId), toScValI128(amount)],
     caller,
     true
   );
 }
 
 /**
+ * Get full campaign details (read-only).
+ * Calls: get_campaign(campaign_id: u32) -> Campaign
+ */
+export async function getCampaign(
+  campaignId: number,
+  caller?: string
+) {
+  const result = await readContract(
+    "get_campaign",
+    [toScValU32(campaignId)],
+    caller
+  );
+  return result;
+}
+
+/**
  * Get total funds for a campaign (read-only).
- * Calls: get_funds(creator: Address) -> i128
+ * Calls: get_funds(campaign_id: u32) -> i128
  */
 export async function getFunds(
-  creator: string,
+  campaignId: number,
   caller?: string
 ): Promise<bigint> {
   const result = await readContract(
     "get_funds",
-    [toScValAddress(creator)],
+    [toScValU32(campaignId)],
     caller
   );
   return result as bigint;
@@ -267,18 +305,33 @@ export async function getFunds(
 
 /**
  * Get goal for a campaign (read-only).
- * Calls: get_goal(creator: Address) -> i128
+ * Calls: get_goal(campaign_id: u32) -> i128
  */
 export async function getGoal(
-  creator: string,
+  campaignId: number,
   caller?: string
 ): Promise<bigint> {
   const result = await readContract(
     "get_goal",
-    [toScValAddress(creator)],
+    [toScValU32(campaignId)],
     caller
   );
   return result as bigint;
+}
+
+/**
+ * Get total number of campaigns (read-only).
+ * Calls: get_campaign_count() -> u32
+ */
+export async function getCampaignCount(
+  caller?: string
+): Promise<number> {
+  const result = await readContract(
+    "get_campaign_count",
+    [],
+    caller
+  );
+  return (result as number) ?? 0;
 }
 
 export { nativeToScVal, scValToNative, Address, xdr };
