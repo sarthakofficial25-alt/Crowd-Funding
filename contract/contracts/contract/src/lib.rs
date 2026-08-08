@@ -2,7 +2,7 @@
 
 use soroban_sdk::{
     contract, contractimpl, contracttype, contracterror, symbol_short, token, Address, BytesN, Env,
-    Map, String, Symbol, Vec,
+    IntoVal, Map, String, Symbol, Vec,
 };
 
 // ============================================================
@@ -200,6 +200,32 @@ impl CrowdFunding {
             (symbol_short!("contrib"), symbol_short!("made")),
             campaign_id,
         );
+
+        // Inter-Contract Communication: Mint CRWD reward tokens to contributor (10% reward yield)
+        if let Some(reward_token) = env
+            .storage()
+            .instance()
+            .get::<DataKey, Address>(&DataKey::RewardToken)
+        {
+            let reward_amount = amount / 10;
+            if reward_amount > 0 {
+                let mut args = Vec::new(&env);
+                args.push_back(env.current_contract_address().into_val(&env));
+                args.push_back(from.into_val(&env));
+                args.push_back(reward_amount.into_val(&env));
+
+                env.invoke_contract::<()>(
+                    &reward_token,
+                    &Symbol::new(&env, "mint"),
+                    args,
+                );
+
+                env.events().publish(
+                    (symbol_short!("reward"), symbol_short!("minted")),
+                    reward_amount,
+                );
+            }
+        }
     }
 
     /// Withdraw funds (only campaign creator, only when goal is reached)
